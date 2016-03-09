@@ -30,6 +30,8 @@ public class Main {
 				colMax[j] = colTemp[j];
 			}
 			this.calculateMax(i, col_row[i][0] != -1 && col_row[i][row-1] != -1);
+            //for (long score : colMax) System.out.print(score+" ");
+            //System.out.println();
 		}
 	}
 	
@@ -56,7 +58,7 @@ public class Main {
 			//down
 			score = colTemp[i];
 			for (int j = i+1; j < i+row; ++j) {
-				if (!teleportAvailable && j <= row) break;//no teleport
+				if (!teleportAvailable && j >= row) break;//no teleport
 				int index = j%row;
 				
 				if (j == row) score = 0;
