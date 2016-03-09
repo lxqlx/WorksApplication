@@ -87,6 +87,7 @@ public class Main {
 				col_row[m][n] = myScanner.nextInt();
 			}
 		}
+		myScanner.close();
 	}
 
 	public static void main(String[] args) {
