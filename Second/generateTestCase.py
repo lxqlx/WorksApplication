@@ -33,7 +33,7 @@ def generateTestCaseLine(filename):
 		fp.write(str(POINTS[i-1]) + " " + str(POINTS[i]) + "\n")
 
 	for i in xrange(1, queries+1):
-		fp.write(str(random.randint(1, 1)) + " " + str(POINTS[i-1]) + "\n")
+		fp.write(str(random.randint(1, 2)) + " " + str(POINTS[i-1]) + "\n")
 
 	fp.close()
 generateTestCaseLine("testcase1")
