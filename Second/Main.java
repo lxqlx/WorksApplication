@@ -5,65 +5,69 @@ import java.util.Queue;
 import java.util.Scanner;
 
 public class Main {
-	private boolean useTable;
-	private int numCity;
-	private int numQuery;
-	private int[] disTableOrFestiveTable;
+	private static final int UPDATE = 1;
+	private static final int QUERY = 2;
+	private static final int MODE = 0;
+	private static final int CITY = 1;
+	private boolean isMemorizing;
+	private int numOfCities;
+	private int numOfQueries;
+	private int[] distanceTableOrFestiveTable;
 	private int[][] queries;
-	private ArrayList<ArrayList<Integer>> adjList;
+	private ArrayList<ArrayList<Integer>> adjacentCities;
 
 	public Main(){
 	}
 	
-	public void run() {
+	public void readAndProcessData() {
 		Scanner myScanner = new Scanner(System.in);
-		numCity = myScanner.nextInt();
-		numQuery = myScanner.nextInt();
+		numOfCities = myScanner.nextInt();
+		numOfQueries = myScanner.nextInt();
 		
-		disTableOrFestiveTable = new int[numCity+1];
-		Arrays.fill(disTableOrFestiveTable, -1);
-		adjList = new ArrayList<ArrayList<Integer>>();
-		for (int i = 0; i < numCity+1; ++i) {
-			adjList.add(new ArrayList<Integer>());
+		distanceTableOrFestiveTable = new int[numOfCities+1];
+		Arrays.fill(distanceTableOrFestiveTable, -1);
+		adjacentCities = new ArrayList<ArrayList<Integer>>();
+		for (int i = 0; i < numOfCities+1; ++i) {
+			adjacentCities.add(new ArrayList<Integer>());
 		}
 		
-		for (int i = 0; i < numCity-1; ++i) {
+		for (int i = 0; i < numOfCities-1; ++i) {
 			int first = myScanner.nextInt();
 			int second = myScanner.nextInt();
-			adjList.get(first).add(second);
-			adjList.get(second).add(first);
+			adjacentCities.get(first).add(second);
+			adjacentCities.get(second).add(first);
 		}
 		
-		queries = new int[numQuery][2];
+		queries = new int[numOfQueries][2];
 		int updateNum = 0, queryNum = 0; 
-		for (int i = 0; i < numQuery; ++i) {
-			queries[i][0] = myScanner.nextInt();
-			queries[i][1] = myScanner.nextInt();
+		for (int i = 0; i < numOfQueries; ++i) {
+			queries[i][MODE] = myScanner.nextInt();
+			queries[i][CITY] = myScanner.nextInt();
 			
-			if (queries[i][0] == 1) updateNum++;
+			if (queries[i][MODE] == UPDATE) updateNum++;
 			else	queryNum++;
 		}
 		myScanner.close();
 		
-		//decide mode
-		this.useTable = queryNum >= updateNum;
+		//if there are more queries than updates, use distance table
+		this.isMemorizing = queryNum >= updateNum;
 		
 		intializeDistance();
-		for (int i = 0; i < numQuery; ++i) {
-			if (queries[i][0] == 1)
-				updateDistance(queries[i][1]);
+		for (int i = 0; i < numOfQueries; ++i) {
+			if (queries[i][MODE] == UPDATE)
+				updateDistance(queries[i][CITY]);
 			else
-				getDistance(queries[i][1]);
+				getDistance(queries[i][CITY]);
 		}
 	}
+	
 	private void getDistance(int city) {
-		if (useTable)
-			System.out.println(disTableOrFestiveTable[city]);
-		else{
-
+		if (isMemorizing)
+			System.out.println(distanceTableOrFestiveTable[city]);
+		else
 			System.out.println(bfsGetDistance(city));
-		}
 	}
+	
 	private int bfsGetDistance(int city) {
 		int dist = 0;
 		
@@ -71,14 +75,14 @@ public class Main {
 		myQ.add(new int[]{city, 0, -1});
 		while(!myQ.isEmpty()) {
 			int[] cd = myQ.poll();
-			if (disTableOrFestiveTable[cd[0]] == 1){
+			if (distanceTableOrFestiveTable[cd[0]] == 1){
 				dist = cd[1];//found result
 				break;
 			}
 			else {
-				for (int i : adjList.get(cd[0])) {
+				for (int i : adjacentCities.get(cd[0])) {
 					if (i == cd[2]) continue;//avoid traverse back to parent
-					myQ.add(new int[]{i, cd[1]+1});
+					myQ.add(new int[]{i, cd[1]+1, cd[0]});
 				}
 			}
 		}
@@ -86,17 +90,17 @@ public class Main {
 	}
 
 	private void updateDistance(int city) {
-		if (useTable)
+		if (isMemorizing)
 			bfsUpdateDistanceTable(0, city);
 		else
-			disTableOrFestiveTable[city] = 1;
+			distanceTableOrFestiveTable[city] = 1;
 	}
 
 	private void intializeDistance() {
-		if (useTable)
+		if (isMemorizing)
 			bfsUpdateDistanceTable(0, 1);
 		else
-			disTableOrFestiveTable[0] = 1;
+			distanceTableOrFestiveTable[0] = 1;
 	}
 	
 	private void bfsUpdateDistanceTable(int dist, int city) {
@@ -104,10 +108,10 @@ public class Main {
 		myQ.add(new int[]{city, dist, -1});
 		while(!myQ.isEmpty()) {
 			int[] cd = myQ.poll();
-			if (disTableOrFestiveTable[cd[0]] == -1 || disTableOrFestiveTable[cd[0]] > cd[1])
+			if (distanceTableOrFestiveTable[cd[0]] == -1 || distanceTableOrFestiveTable[cd[0]] > cd[1])
 			{
-				disTableOrFestiveTable[cd[0]] = cd[1];
-				for (int i : adjList.get(cd[0])) {
+				distanceTableOrFestiveTable[cd[0]] = cd[1];
+				for (int i : adjacentCities.get(cd[0])) {
 					if (i == cd[2]) continue;//avoid traverse back to parent
 					myQ.add(new int[]{i, cd[1]+1, cd[0]});
 				}
@@ -117,7 +121,7 @@ public class Main {
 
 	public static void main(String[] args) {
 		Main myMain = new Main();
-		myMain.run();
+		myMain.readAndProcessData();
 	}
 
 }
