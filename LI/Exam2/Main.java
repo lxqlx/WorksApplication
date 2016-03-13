@@ -5,15 +5,14 @@ import java.util.Queue;
 import java.util.Scanner;
 
 public class Main {
+	private static final int NOVALUE = -1;
 	private static final int UPDATE = 1;
-	private static final int QUERY = 2;
-	private static final int MODE = 0;
-	private static final int CITY = 1;
-	private boolean isMemorizing;
+	private static final int CITY = 0;
+	private static final int DIST = 1;
+	private static final int PARENT = 2;
 	private int numOfCities;
 	private int numOfQueries;
-	private int[] distanceTableOrFestiveTable;
-	private int[][] queries;
+	private int[] distanceTable;
 	private ArrayList<ArrayList<Integer>> adjacentCities;
 
 	public Main(){
@@ -24,8 +23,8 @@ public class Main {
 		numOfCities = myScanner.nextInt();
 		numOfQueries = myScanner.nextInt();
 		
-		distanceTableOrFestiveTable = new int[numOfCities+1];
-		Arrays.fill(distanceTableOrFestiveTable, -1);
+		distanceTable = new int[numOfCities+1];
+		Arrays.fill(distanceTable, NOVALUE);
 		adjacentCities = new ArrayList<ArrayList<Integer>>();
 		for (int i = 0; i < numOfCities+1; ++i) {
 			adjacentCities.add(new ArrayList<Integer>());
@@ -38,82 +37,44 @@ public class Main {
 			adjacentCities.get(second).add(first);
 		}
 		
-		queries = new int[numOfQueries][2];
-		int updateNum = 0, queryNum = 0; 
+		intializeDistance();
+		
 		for (int i = 0; i < numOfQueries; ++i) {
-			queries[i][MODE] = myScanner.nextInt();
-			queries[i][CITY] = myScanner.nextInt();
+			int mode = myScanner.nextInt();
+			int city = myScanner.nextInt();
 			
-			if (queries[i][MODE] == UPDATE) updateNum++;
-			else	queryNum++;
+			if (mode == UPDATE)
+				updateDistance(city);
+			else
+				getDistance(city);
+
 		}
 		myScanner.close();
-		
-		//if there are more queries than updates, use distance table
-		this.isMemorizing = queryNum >= updateNum;
-		
-		intializeDistance();
-		for (int i = 0; i < numOfQueries; ++i) {
-			if (queries[i][MODE] == UPDATE)
-				updateDistance(queries[i][CITY]);
-			else
-				getDistance(queries[i][CITY]);
-		}
 	}
 	
 	private void getDistance(int city) {
-		if (isMemorizing)
-			System.out.println(distanceTableOrFestiveTable[city]);
-		else
-			System.out.println(bfsGetDistance(city));
-	}
-	
-	private int bfsGetDistance(int city) {
-		int dist = 0;
-		
-		Queue<int[]> myQ = new LinkedList<int[]>();
-		myQ.add(new int[]{city, 0, -1});
-		while(!myQ.isEmpty()) {
-			int[] cd = myQ.poll();
-			if (distanceTableOrFestiveTable[cd[0]] == 1){
-				dist = cd[1];//found result
-				break;
-			}
-			else {
-				for (int i : adjacentCities.get(cd[0])) {
-					if (i == cd[2]) continue;//avoid traverse back to parent
-					myQ.add(new int[]{i, cd[1]+1, cd[0]});
-				}
-			}
-		}
-		return dist;
+		System.out.println(distanceTable[city]);
 	}
 
 	private void updateDistance(int city) {
-		if (isMemorizing)
-			bfsUpdateDistanceTable(0, city);
-		else
-			distanceTableOrFestiveTable[city] = 1;
+		bfsUpdateDistanceTable(0, city);	
 	}
 
 	private void intializeDistance() {
-		if (isMemorizing)
-			bfsUpdateDistanceTable(0, 1);
-		else
-			distanceTableOrFestiveTable[0] = 1;
+		bfsUpdateDistanceTable(0, 1);
 	}
 	
 	private void bfsUpdateDistanceTable(int dist, int city) {
 		Queue<int[]> myQ = new LinkedList<int[]>();
 		myQ.add(new int[]{city, dist, -1});
 		while(!myQ.isEmpty()) {
-			int[] cd = myQ.poll();
-			if (distanceTableOrFestiveTable[cd[0]] == -1 || distanceTableOrFestiveTable[cd[0]] > cd[1])
+			int[] cityDistParent = myQ.poll();
+			if (distanceTable[cityDistParent[CITY]] == NOVALUE || distanceTable[cityDistParent[CITY]] > cityDistParent[DIST])
 			{
-				distanceTableOrFestiveTable[cd[0]] = cd[1];
-				for (int i : adjacentCities.get(cd[0])) {
-					if (i == cd[2]) continue;//avoid traverse back to parent
-					myQ.add(new int[]{i, cd[1]+1, cd[0]});
+				distanceTable[cityDistParent[CITY]] = cityDistParent[DIST];
+				for (int neighbour : adjacentCities.get(cityDistParent[CITY])) {
+					if (neighbour == cityDistParent[PARENT]) continue;//avoid traverse back to parent
+					myQ.add(new int[]{neighbour, cityDistParent[DIST]+1, cityDistParent[CITY]});
 				}
 			}
 		}
